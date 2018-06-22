@@ -1,0 +1,29 @@
+name:                ohua-show
+version:             0.1.0.0
+#synopsis:
+#description:
+homepage:            https://github.com/JustusAdam/show#readme
+license:             BSD3
+author:              Justus Adam
+maintainer:          dev@justus.science
+copyright:           © 2017 Justus Adam
+category:            Devel
+extra-source-files:
+- README.md
+
+dependencies:
+  - base >= 4.7 && < 5
+  - ohua-core
+  - fgl
+  - graphviz
+  - text
+  - aeson
+  - bytestring
+  - optparse-applicative
+  - template-haskell
+  - filepath
+
+executables:
+  ohua-show:
+    source-dirs:      src
+    main:             Main.hs
