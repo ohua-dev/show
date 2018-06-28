@@ -10,6 +10,7 @@ import qualified Data.Graph.Inductive.PatriciaTree as PG
 import Options.Applicative
 import Language.Haskell.TH
 import System.FilePath
+import System.IO
 import qualified Data.Aeson as A
 import qualified Data.Aeson.TH as A
 import Data.Maybe
@@ -45,12 +46,15 @@ printDot :: FilePath -> PG.DotGraph PG.Node -> IO ()
 printDot path = PG.writeFile path . PG.printDotGraph
 
 readGraph :: FilePath -> IO G.OutGraph
-readGraph p = either error graph . A.eitherDecode <$> BS.readFile p
+readGraph p = do
+  file <- BS.readFile p
+  either error pure $ (graph <$> A.eitherDecode file) <|> A.eitherDecode file
 
 data Opts = Opts { action :: Action, input :: FilePath }
 
 data Action = Preview | Print (Maybe PG.GraphvizOutput) (Maybe FilePath)
 
+formatOptions :: [String]
 formatOptions =
     $(let e = fail "GraphvizOutput had unexpected constructor"
        in reify ''PG.GraphvizOutput >>= \case
