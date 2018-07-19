@@ -22,8 +22,8 @@ will be a `dot` file. This works even if `graphviz` is not installed.
 
 ## Installing
 
-Prebuilt binaries are available for Linux and OSX. Provided for each release by
-[Travis CI](https://travis-ci.org/ohua-dev/show).
+Prebuilt binaries are available for 64bit Linux and OSX. Provided for each
+release by [Travis CI](https://travis-ci.org/ohua-dev/show).
 
 Simply download the appropriate executable for you platform (`ohua-show-linux` or
 `ohua-show-osx`) from the [releases page](/releases/latest).
