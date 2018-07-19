@@ -10,7 +10,6 @@ import qualified Data.Graph.Inductive.PatriciaTree as PG
 import Options.Applicative
 import Language.Haskell.TH
 import System.FilePath
-import System.IO
 import qualified Data.Aeson as A
 import qualified Data.Aeson.TH as A
 import Data.Maybe
@@ -22,6 +21,8 @@ import Ohua.Serialize.JSON ()
 import qualified Data.ByteString.Lazy as BS
 
 
+-- This is a hack. Right now the `GraphFile` data structure is defined only in
+-- ohuac, and therefore we do not have access to it here.
 data P = P { graph :: G.OutGraph }
 
 A.deriveFromJSON A.defaultOptions ''P
@@ -48,12 +49,24 @@ printDot path = PG.writeFile path . PG.printDotGraph
 readGraph :: FilePath -> IO G.OutGraph
 readGraph p = do
   file <- BS.readFile p
+  -- This is also kind of a hack. It fist attempts to parse as a `P`/`GraphFile`
+  -- structure, if that fails it tries to parse it as a direct graph. In the
+  -- future this may be changed.
   either error pure $ (graph <$> A.eitherDecode file) <|> A.eitherDecode file
 
-data Opts = Opts { action :: Action, input :: FilePath }
+data Opts = Opts
+    { action :: Action
+    , input :: FilePath
+    }
 
-data Action = Preview | Print (Maybe PG.GraphvizOutput) (Maybe FilePath)
+data Action
+    = Preview
+    | Print (Maybe PG.GraphvizOutput)
+            (Maybe FilePath)
 
+-- This is some Template Haskell to get string representations for the
+-- `GraphvizOutput` options which the graphviz library supports. Used for the
+-- help text.
 formatOptions :: [String]
 formatOptions =
     $(let e = fail "GraphvizOutput had unexpected constructor"
@@ -67,6 +80,23 @@ formatOptions =
                       cons
               _ -> e)
 
+
+printCommandDescription :: String
+printCommandDescription =
+    "Print the ohua graph as viewable format. \
+    \To run this command with the --format/-f option specified \
+    \`graphviz` must be installed on the system. \
+    \If no format is specified prints a `dot` file, \
+    \this works *without* having `graphviz` installed."
+
+previewCommandDescription :: String
+previewCommandDescription =
+  "Preview an ohua graph with sensible settings. \
+  \Note that this command may currently silently fail \
+  \if certain necessary programs are not installed on the system. \
+  \See Issue #1. If this happens use the `print` command \
+  \in conjunction with the `graphviz` executable as a more stable process."
+
 optsParser :: ParserInfo Opts
 optsParser =
     info
@@ -79,14 +109,10 @@ optsParser =
         (hsubparser
              (command
                   "print"
-                  (info
-                       printParser
-                       (progDesc "Print the ohua graph as viewable format. To run this command with the --format/-f option specified `graphviz` must be installed on the system. If no format is specified prints a `dot` file, this works *without* having `graphviz` installed.")) <>
+                  (info printParser (progDesc printCommandDescription)) <>
               command
                   "preview"
-                  (info
-                       (pure Preview)
-                       (progDesc "Preview an ohua graph with sensible settings"))) <|>
+                  (info (pure Preview) (progDesc previewCommandDescription))) <|>
          pure Preview) <*>
         strArgument (metavar "GRAPH_FILE" <> help "Input graph")
     printParser =
@@ -105,7 +131,6 @@ optsParser =
                  (short 'o' <> long "output" <>
                   help
                       "Specify the output path for the file. Otherwise it will be generated from the input name and the specified format."))
-
 main :: IO ()
 main =
     execParser optsParser >>= \opts -> do
