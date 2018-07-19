@@ -25,6 +25,7 @@ install:
 - stack --no-terminal --install-ghc test --only-dependencies
 script:
 - stack --no-terminal test --ghc-options=-Werror --haddock --no-haddock-deps
+before_deploy: "mkdir deploy && mv `stack exec -- which ohua-show` deploy/ohua-show-$TRAVIS_OS_NAME"
 deploy:
   provider: releases
   skip_cleanup: true
@@ -34,6 +35,5 @@ deploy:
     tags: true
   api_key:
     secure: cV/xUFfOirFLLin/7WzPgKvmjNDFUYPMqDtB4ipNJA+KKNUUz95YwoX64hvdv218uN2fA5g9+41r9NwycPuCuLhf0wzpFreGUG+z/Hs4ZelDsiigGbFOlfZXoWT47+wetTtz2xjGJQK4uxQuFP42awKkiO7GRpJN9M5YcjC4mg+W2JiT9aH4odl9vT/Iu/fVW4OY+uRIfCET9j2GWiTFUhIAsE+Acg2jj19N1bAV/1TN4G+/+7VEmYJ7G14r9HplptO+/Wi/zigt3lXgyR0PsIfiRMybtJ4VhTbITrS6sgReFOK50uX2UrSNeltolj2dScMC2qrJipN+M3Mha8HDZcRLDKh9m3OQIFn3nC+f+TuwTffy7X2xyBHqlf7/uGI+AbatyhKkohQ5HqsmLKrJ+63+1zmSMtCHxI8qEw0zDULOe9gEQISFD1RAPGN6Q+3jmGfQTP+KMfaW/TFetKAnacoSNg7K0Xm1ZC7dhgWSWmmhmALwYsXEn1yeyaH/IvDNQ9nvlfYTUBfLr2Gs2K7JxEqKnTqK7XsL32yPU0zL1HzgfmLIvqFM0BAK0AXNLUtonpvjARg0yExQK5ODbIV9Zjpbwyl4yeebWX2kiHQ+VOXE+s1Q0FoSHOYqJI30OqA2SGMSLqpo9cP1EWly+4pFFymHClMUjyawjhZmugDV/Tg=
-  file: ohua-show
   on:
     repo: ohua-dev/show
