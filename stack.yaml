@@ -18,7 +18,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: lts-10.10
+resolver: lts-12.06
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -37,7 +37,8 @@ packages:
 - .
 - location:
     git: https://github.com/ohua-dev/ohua-core
-    commit: 0865d3761a731bba8c838658b21519c358dca6a7
+    commit: 83e989949ee31789f1c5c377a9e35d3473bb32e9
+    subdirs: [core]
   extra-dep: true
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.

@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell, LambdaCase, RecordWildCards,
-  TypeFamilies #-}
+  TypeFamilies, TupleSections, TypeApplications #-}
 module Main where
 
 import qualified Ohua.DFGraph as G
@@ -19,6 +19,7 @@ import Data.List (intercalate)
 import Ohua.Types
 import Ohua.Serialize.JSON ()
 import qualified Data.ByteString.Lazy as BS
+import qualified Ohua.Types as OT
 
 
 -- This is a hack. Right now the `GraphFile` data structure is defined only in
@@ -30,18 +31,31 @@ A.deriveFromJSON A.defaultOptions ''P
 
 ohuaGrToDot :: G.OutGraph -> PG.Gr String String
 ohuaGrToDot G.OutGraph {..} =
-    PG.mkGraph ((envNode, "env") : map opToNode operators) (map arcToEdge arcs)
+    PG.mkGraph
+        ((envNode, "From Environment") : (litNode, "Literals") : map opToNode operators)
+        (map (arcToEdge targetToInfo) (G.direct arcs) <>
+         map (arcToEdge ((, "state") . unwrap)) (G.state arcs))
   where
     envNode = succ $ maximum (map (unwrap . G.operatorId) operators)
+    litNode = succ envNode
     opToNode G.Operator {..} = (unwrap operatorId, show operatorType)
-    arcToEdge G.Arc {..} = (sOp, tOp, printf "%d -> %d" sIdx tIdx :: String)
+    targetToInfo G.Target {..} = (unwrap operator, show index)
+
+    arcToEdge :: (target -> (Int, String)) -> G.Arc target (G.Source OT.Lit) -> (Int, Int, String)
+    arcToEdge targetToInfo' G.Arc {..} =
+        (sOp, tOp, printf "%v -> %v" sIdx tIdx :: String)
       where
         (sOp, sIdx) =
             case source of
                 G.LocalSource t -> targetToInfo t
-                G.EnvSource e -> (envNode, unwrap e)
-        (tOp, tIdx) = targetToInfo target
-        targetToInfo G.Target {..} = (unwrap operator, index)
+                G.EnvSource (OT.EnvRefLit l) -> (envNode, show l)
+                G.EnvSource e -> (litNode, case e of
+                                              OT.NumericLit n -> show n
+                                              OT.UnitLit -> "()"
+                                              OT.FunRefLit _f -> "<function reference>"
+                                              OT.EnvRefLit _ -> error "impossible"
+                                )
+        (tOp, tIdx) = targetToInfo' target
 
 printDot :: FilePath -> PG.DotGraph PG.Node -> IO ()
 printDot path = PG.writeFile path . PG.printDotGraph
