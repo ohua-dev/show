@@ -20,6 +20,8 @@ import Ohua.Types
 import Ohua.Serialize.JSON ()
 import qualified Data.ByteString.Lazy as BS
 import qualified Ohua.Types as OT
+import qualified Ohua.ALang.PPrint as PP
+import qualified Data.Text as T
 
 
 -- This is a hack. Right now the `GraphFile` data structure is defined only in
@@ -36,9 +38,10 @@ ohuaGrToDot G.OutGraph {..} =
         (map (arcToEdge targetToInfo) (G.direct arcs) <>
          map (arcToEdge ((, "state") . unwrap)) (G.state arcs))
   where
+    mkOpStr = T.unpack . PP.quickRender
     envNode = succ $ maximum (map (unwrap . G.operatorId) operators)
     litNode = succ envNode
-    opToNode G.Operator {..} = (unwrap operatorId, show operatorType)
+    opToNode G.Operator {..} = (unwrap operatorId, mkOpStr operatorType)
     targetToInfo G.Target {..} = (unwrap operator, show index)
 
     arcToEdge :: (target -> (Int, String)) -> G.Arc target (G.Source OT.Lit) -> (Int, Int, String)
@@ -52,7 +55,7 @@ ohuaGrToDot G.OutGraph {..} =
                 G.EnvSource e -> (litNode, case e of
                                               OT.NumericLit n -> show n
                                               OT.UnitLit -> "()"
-                                              OT.FunRefLit _f -> "<function reference>"
+                                              OT.FunRefLit (FunRef f _) -> "<funref" <> mkOpStr f <> " >"
                                               OT.EnvRefLit _ -> error "impossible"
                                 )
         (tOp, tIdx) = targetToInfo' target
