@@ -35,11 +35,11 @@ resolver: lts-12.06
 #  - wai
 packages:
 - .
-- location:
-    git: https://github.com/ohua-dev/ohua-core
-    commit: 83e989949ee31789f1c5c377a9e35d3473bb32e9
-    subdirs: [core]
-  extra-dep: true
+
+extra-deps:
+- github: ohua-dev/ohua-core
+  commit: 83e989949ee31789f1c5c377a9e35d3473bb32e9
+  subdirs: [core]
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)
